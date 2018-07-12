@@ -25,6 +25,7 @@ $Date: 2013-04-22 23:44:56 +0200 (Mo, 22. Apr 2013) $
 ********************************************************************/
 
 #include "screwterminal.h"
+#include "../debugdialog.h"
 #include "../utils/graphicsutils.h"
 #include "../fsvgrenderer.h"
 #include "../sketch/infographicsview.h"
@@ -33,6 +34,7 @@ $Date: 2013-04-22 23:44:56 +0200 (Mo, 22. Apr 2013) $
 #include "../utils/schematicrectconstants.h"
 #include "partlabel.h"
 #include "partfactory.h"
+
 
 #include <QDomNodeList>
 #include <QDomDocument>
@@ -131,7 +133,10 @@ void ScrewTerminal::initSpacings() {
 
 QString ScrewTerminal::makeBreadboardSvg(const QString & expectedFileName) 
 {
-	QStringList pieces = expectedFileName.split("_");
+
+    DebugDialog::debug("ScrewTerminal::makeBreadboardSvg(" + expectedFileName + "):");
+
+    QStringList pieces = expectedFileName.split("_");
 
 	int pins = pieces.at(2).toInt();
 	double increment = 0.1;  // inches

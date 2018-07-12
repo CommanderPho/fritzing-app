@@ -1812,6 +1812,10 @@ QStringList MainWindow::saveBundledAux(ModelPart *mp, const QDir &destFolder) {
 		QString filename = PartFactory::getSvgFilename(mp, basename, true, true);
 		if (filename.isEmpty()) continue;
 
+        //qDebug(QString("saveBundledAux is called: ") + filename)
+        DebugDialog::debug(QString("saveBundledAux is called: ") + filename);
+
+
 		QFile file(filename);
 		basename.replace("/", ".");
 		QString fn = ZIP_SVG + basename;

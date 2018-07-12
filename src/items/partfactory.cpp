@@ -74,10 +74,15 @@ const QString PartFactory::OldSchematicPrefix("0.3.schem.");
 ItemBase * PartFactory::createPart( ModelPart * modelPart, ViewLayer::ViewLayerPlacement viewLayerPlacement, ViewLayer::ViewID viewID, const ViewGeometry & viewGeometry, long id, QMenu * itemMenu, QMenu * wireMenu, bool doLabel)
 {
 	modelPart->setModelIndexFromMultiplied(id);			// make sure the model index is synched with the id; this is not always the case when parts are first created.
+
+
+    DebugDialog::debug("PartFactory::createPart(...) with objectName: " + modelPart->title());
+
 	ItemBase * itemBase = createPartAux(modelPart, viewID, viewGeometry, id, itemMenu, wireMenu, doLabel);
 	if (itemBase) {
 		itemBase->setViewLayerPlacement(viewLayerPlacement);
-	}
+
+    }
 	return itemBase;
 }
 
@@ -519,6 +524,7 @@ QString PartFactory::getFzpFilename(const QString & moduleID)
 
 void PartFactory::initFolder()
 {
+    DebugDialog::debug("PartFactory::initFolder()");
 	LockManager::initLockedFiles("partfactory", PartFactoryFolderPath, LockedFiles, LockManager::SlowTime);
 	QFileInfoList backupList;
 	LockManager::checkLockedFiles("partfactory", backupList, LockedFiles, true, LockManager::SlowTime);

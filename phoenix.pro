@@ -36,6 +36,21 @@ unix:!macx {
     CONFIG += link_pkgconfig
 }
 
+
+macx {
+    # Support for pkg-config is disabled by default in the Qt package for mac
+    # However, it can be installed with macPorts/Brew etc.
+    # So check if it exists, and re-enable if it does.
+
+    PKG_CONFIG_BIN = $$system(which pkg-config)
+
+    !isEmpty(PKG_CONFIG_BIN) {
+        QT_CONFIG -= no-pkg-config
+        CONFIG += link_pkgconfig
+    }
+}
+
+
 load(configure)
 
 win32 {
@@ -84,7 +99,7 @@ macx {
     Debug:RCC_DIR = $${DEBDIR}
     Debug:UI_DIR = $${DEBDIR}
 
-    QMAKE_MAC_SDK = macosx10.11            # uncomment/adapt for your version of OSX
+    QMAKE_MAC_SDK = macosx10.13            # uncomment/adapt for your version of OSX
     CONFIG += x86_64 # x86 ppc
     QMAKE_INFO_PLIST = FritzingInfo.plist
     #DEFINES += QT_NO_DEBUG                # uncomment this for xcode

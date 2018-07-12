@@ -284,6 +284,8 @@ QString Dip::obsoleteMakeSchematicSvg(const QStringList & labels)
  
 QString Dip::makeBreadboardSvg(const QString & expectedFileName) 
 {
+
+    DebugDialog::debug("Dip::makeBreadboardSvg(" + expectedFileName + "):");
 	if (expectedFileName.contains("_sip_")) return makeBreadboardSipSvg(expectedFileName);
 	if (expectedFileName.contains("_dip_")) return makeBreadboardDipSvg(expectedFileName);
 	return "";

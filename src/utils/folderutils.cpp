@@ -652,6 +652,8 @@ void FolderUtils::makePartFolderHierarchy(const QString & prefixFolder, const QS
 	dir.mkdir("breadboard");
 	dir.mkdir("schematic");
 	dir.mkdir("pcb");
+
+    DebugDialog::debug("Part Folder Heirarchy made for: " + destFolder);
 }
 
 void FolderUtils::copyBin(const QString & dest, const QString & source) {
