@@ -679,6 +679,8 @@ QString PinHeader::makeBreadboardSvg(const QString & expectedFileName)
 	QStringList pieces = expectedFileName.split("_");
 	if (pieces.count() < 7) return "";
 
+    DebugDialog::debug("PinHeader::makeBreadboardSvg(" + expectedFileName + "):");
+
 	int pinIndex = pieces.count() - 3;
 
 	int pins = pieces.at(pinIndex).toInt();
@@ -686,7 +688,7 @@ QString PinHeader::makeBreadboardSvg(const QString & expectedFileName)
 		return makeBreadboardShroudedSvg(pins);
 	}
     if (expectedFileName.contains("double") && !expectedFileName.contains("smd", Qt::CaseInsensitive)) {
-        //return makeBreadboardDoubleSvg(expectedFileName, pins);
+        return makeBreadboardDoubleSvg(expectedFileName, pins);
     }
 
 	double unitHeight = 0.1;  // inches
@@ -721,6 +723,9 @@ QString PinHeader::makeBreadboardSvg(const QString & expectedFileName)
 }
 
 QString PinHeader::makeBreadboardDoubleSvg(const QString & expectedFileName, int pins) {
+
+    DebugDialog::debug("PinHeader::makeBreadboardDoubleSvg(" + expectedFileName + ", pins: " + pins + "):");
+
 	QString header("<?xml version='1.0' encoding='utf-8'?>\n"
 				"<svg version='1.2' baseProfile='tiny' "
 				"xmlns='http://www.w3.org/2000/svg'  x='0in' y='0in' width='%1in' "
