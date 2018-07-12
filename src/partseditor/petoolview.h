@@ -59,6 +59,7 @@ Q_OBJECT
 public:
 	PEToolView(QWidget * parent = NULL);
 	~PEToolView();
+    bool eventFilter(QObject *object, QEvent *event);
 
     void initConnectors(QList<QDomElement> * connectorList);
     int currentConnectorIndex();
@@ -69,6 +70,8 @@ public:
 	void setChildrenVisible(bool vis);
     void enableConnectorChanges(bool enableTerminalPointDrag, bool enableTerminalPointControls, bool enableInfo, bool enableAssign);
 	void showAssignedConnectors(const QDomDocument * svgDoc, ViewLayer::ViewID);
+    void trySelectPreviousConnectorInList();
+    void trySelectNextConnectorInList();
 
 signals:
     void switchedConnector(int);

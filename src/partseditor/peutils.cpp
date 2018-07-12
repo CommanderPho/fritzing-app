@@ -36,6 +36,7 @@ $Date: 2013-02-26 16:26:03 +0100 (Di, 26. Feb 2013) $
 #include <QRadioButton>
 #include <QLabel>
 #include <QTextStream>
+#include <QMargins>
 
 QString PEUtils::Units = "mm";
 const int PEUtils::Spacing = 10;

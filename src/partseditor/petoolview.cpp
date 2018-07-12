@@ -31,6 +31,7 @@ $Date: 2013-03-09 08:18:59 +0100 (Sa, 09. Mrz 2013) $
 #include "../utils/graphicsutils.h"
 #include "../debugdialog.h"
 
+#include <QKeyEvent>
 #include <QHBoxLayout>
 #include <QTextStream>
 #include <QSplitter>
@@ -88,14 +89,18 @@ PEToolView::PEToolView(QWidget * parent) : QFrame (parent)
 
     QVBoxLayout * connectorsLayout = new QVBoxLayout;
 
+    // Set the connectors panel title
     QLabel * label = new QLabel(tr("Connector List (a checkmark means the graphic was selected)"));
 	connectorsLayout->addWidget(label);
 
-
+    // Add the main connector list
     m_connectorListWidget = new QTreeWidget();
 	m_connectorListWidget->setColumnCount(2);
 	connect(m_connectorListWidget, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(switchConnector(QTreeWidgetItem *, QTreeWidgetItem *)));
     connectorsLayout->addWidget(m_connectorListWidget);
+
+    m_connectorListWidget->installEventFilter(this);
+
 
     m_busModeBox = new QCheckBox(tr("Set Internal Connections"));
     m_busModeBox->setChecked(false);
@@ -112,6 +117,8 @@ PEToolView::PEToolView(QWidget * parent) : QFrame (parent)
     m_connectorInfoWidget = new QFrame;             // a placeholder for PEUtils::connectorForm
     m_connectorInfoLayout->addWidget(m_connectorInfoWidget);             
 
+
+    // Setup the "Terminal Point" info box:
 	m_terminalPointGroupBox = new QGroupBox("Terminal point");
 	m_terminalPointGroupBox->setToolTip(tr("Controls for setting the terminal point for a connector. The terminal point is where a wire will attach to the connector. You can also drag the crosshair of the current connector"));
     QVBoxLayout * anchorGroupLayout = new QVBoxLayout;
@@ -139,14 +146,17 @@ PEToolView::PEToolView(QWidget * parent) : QFrame (parent)
     posRadioFrame->setLayout(posRadioLayout);
     anchorGroupLayout->addWidget(posRadioFrame);
 
+    // Add the x and y adjustment properties to the info box
     QFrame * posNumberFrame = new QFrame;
     QHBoxLayout * posNumberLayout = new QHBoxLayout;
+    const QMargins fieldContentMargins = QMargins(4,0,16,0);
 
     label = new QLabel("x");
     posNumberLayout->addWidget(label);
 
     m_terminalPointX = new PEDoubleSpinBox;
     m_terminalPointX->setDecimals(4);
+    m_terminalPointX->setContentsMargins(fieldContentMargins);
     m_terminalPointX->setToolTip(tr("Modifies the x-coordinate of the terminal point"));
     posNumberLayout->addWidget(m_terminalPointX);
     connect(m_terminalPointX, SIGNAL(getSpinAmount(double &)), this, SLOT(getSpinAmountSlot(double &)), Qt::DirectConnection);
@@ -159,6 +169,7 @@ PEToolView::PEToolView(QWidget * parent) : QFrame (parent)
 
     m_terminalPointY = new PEDoubleSpinBox;
     m_terminalPointY->setDecimals(4);
+    m_terminalPointY->setContentsMargins(fieldContentMargins);
     m_terminalPointY->setToolTip(tr("Modifies the y-coordinate of the terminal point"));
     posNumberLayout->addWidget(m_terminalPointY);
     connect(m_terminalPointY, SIGNAL(getSpinAmount(double &)), this, SLOT(getSpinAmountSlot(double &)), Qt::DirectConnection);
@@ -202,6 +213,49 @@ PEToolView::~PEToolView()
 {
 }
 
+
+bool PEToolView::eventFilter(QObject *object, QEvent *event)
+{
+
+    if(object == this->m_connectorListWidget)
+    {
+        DebugDialog::debug("PEToolView::eventFilter called!");
+
+        switch (event->type()) {
+        case QEvent::KeyRelease:
+            {
+                QKeyEvent * kevent = static_cast<QKeyEvent *>(event);
+                switch (kevent->key()) {
+                case Qt::Key_Up:
+                    this->trySelectPreviousConnectorInList();
+                    return true;
+                    break;
+                case Qt::Key_Down:
+                    this->trySelectNextConnectorInList();
+                    return true;
+                    break;
+                default:
+                    return true;
+                    break;
+                }
+            }
+            break;
+
+        case QEvent::KeyPress:
+            return true;
+            break;
+
+        default:
+            break;
+        }
+//        label->setText(tree->currentItem()->text(0));
+    }
+
+    return false;
+}
+
+
+// Called by the initializer after layout
 void PEToolView::enableConnectorChanges(bool enableTerminalPointDrag, bool enableTerminalPointControls, bool enableInfo, bool enableAssign)
 {
     if (m_assignButton) {
@@ -226,6 +280,9 @@ void PEToolView::enableConnectorChanges(bool enableTerminalPointDrag, bool enabl
     }
 }
 
+
+
+// Rebuilds the connector list items
 void PEToolView::initConnectors(QList<QDomElement> * connectorList) {
     m_connectorListWidget->blockSignals(true);
 
@@ -245,12 +302,60 @@ void PEToolView::initConnectors(QList<QDomElement> * connectorList) {
 		m_connectorListWidget->setItemWidget(item, 1, label);
     }
 
+    // Try to select the first connector if the list isn't empty
     if (connectorList->count() > 0) {
         m_connectorListWidget->setCurrentItem(m_connectorListWidget->topLevelItem(0));
         switchConnector(m_connectorListWidget->currentItem(), NULL);
     }
 
     m_connectorListWidget->blockSignals(false);
+}
+
+void PEToolView::trySelectPreviousConnectorInList() {
+    // Try to select the previous connector if the list isn't empty
+    if (m_connectorList->count() > 0) {
+        int currentSelectedIndex = currentConnectorIndex();
+        QTreeWidgetItem* currentSelectedItem = m_connectorListWidget->currentItem();
+
+        if (currentSelectedIndex > 0) {
+            // Can select previous selection
+            int proposedIndex = (currentSelectedIndex - 1);
+            DebugDialog::debug("Selecting previous index: " + QString::number(proposedIndex) + "!");
+            QTreeWidgetItem * proposedPrev = m_connectorListWidget->topLevelItem(proposedIndex);
+            QTreeWidgetItem * oldSelection = currentSelectedItem;
+            m_connectorListWidget->setCurrentItem(proposedPrev);
+            switchConnector(proposedPrev, oldSelection);
+        }
+        else {
+            DebugDialog::debug("Can't select previous index.");
+            return; // Can't do anything
+        }
+    }
+}
+
+
+void PEToolView::trySelectNextConnectorInList() {
+    // Try to select the next connector if the list isn't empty
+    if (m_connectorList->count() > 0) {
+        int maxSelectionIndex = (m_connectorListWidget->topLevelItemCount() - 1);
+        int currentSelectedIndex = currentConnectorIndex();
+        QTreeWidgetItem* currentSelectedItem = m_connectorListWidget->currentItem();
+        //int index = currentSelectedItem->data(0, Qt::UserRole).toInt();
+
+        if (currentSelectedIndex < maxSelectionIndex) {
+            // Can advance selection
+            int proposedIndex = (currentSelectedIndex + 1);
+            DebugDialog::debug("Selecting previous index: " + QString::number(proposedIndex) + "!");
+            QTreeWidgetItem * proposedNext = m_connectorListWidget->topLevelItem(proposedIndex);
+            QTreeWidgetItem * oldSelection = currentSelectedItem;
+            m_connectorListWidget->setCurrentItem(proposedNext);
+            switchConnector(proposedNext, oldSelection);
+        }
+        else {
+            DebugDialog::debug("Can't select next index.");
+            return; // Can't do anything
+        }
+    }
 }
 
 void PEToolView::showAssignedConnectors(const QDomDocument * svgDoc, ViewLayer::ViewID viewID) {
@@ -424,6 +529,8 @@ void PEToolView::pickModeChangedSlot() {
 	emit pickModeChanged(true);
 }
 
+
+// This is called to hide the "Select graphic" button for any non selected connection items (if needed) and to create one for the currently selected one.
 void PEToolView::hideConnectorListStuff() {
 	m_connectorListWidget->setHeaderHidden(true);
 	QTreeWidgetItem * current = m_connectorListWidget->currentItem();
@@ -447,6 +554,12 @@ void PEToolView::hideConnectorListStuff() {
 				m_assignButton = new QPushButton(tr("Select graphic"));
                 m_assignButton->setMaximumWidth(150);
 				connect(m_assignButton, SIGNAL(clicked()), this, SLOT(pickModeChangedSlot()), Qt::DirectConnection);
+                m_assignButton->setShortcut(QKeySequence(Qt::Key_E));
+
+                //QShortcut * shortcut = new QShortcut(QKeySequence(Qt::Key_E), m_assignButton, SLOT(clicked()));
+                //shortcut->setAutoRepeat(false);
+
+//                m_assignButton->setShortcutAutoRepeat();
 				m_assignButton->setToolTip(tr("Use the cursor location and mouse wheel to navigate to the SVG element which you want to assign to the current connector, then mouse down to select it."));
 				m_connectorListWidget->setItemWidget(item, 1, m_assignButton);
 			}

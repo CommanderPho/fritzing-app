@@ -3285,6 +3285,32 @@ bool PEMainWindow::eventFilter(QObject *object, QEvent *event)
 
 		return false;
 	}
+    else {
+        switch (event->type()) {
+            case QEvent::KeyPress:
+            {
+                QKeyEvent * kevent = static_cast<QKeyEvent *>(event);
+                switch (kevent->key()) {
+                case Qt::Key_Up:
+                    return true;
+                    break;
+                case Qt::Key_Down:
+                    return true;
+                    break;
+                default:
+                    return true;
+                    break;
+                }
+    //            if (kevent->key() == Qt::Key_Down) {
+    //                return true;
+    //            }
+            }
+
+            default:
+                break;
+            }
+
+    }
 
 	//qDebug() << "event" << event->type();
     if (event->type() == QEvent::FocusIn) {
